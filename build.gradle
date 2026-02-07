@@ -1,0 +1,245 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.3'
+}
+
+import org.gradle.internal.os.OperatingSystem
+
+ext {
+    if (project.hasProperty('hytale_home')) {
+        hytaleHome = project.findProperty('hytale_home')
+    }
+    else {
+        def os = OperatingSystem.current()
+        if (os.isWindows()) {
+            hytaleHome = "${System.getProperty("user.home")}/AppData/Roaming/Hytale"
+        }
+        else if (os.isMacOsX()) {
+            hytaleHome = "${System.getProperty("user.home")}/Library/Application Support/Hytale"
+        }
+        else if (os.isLinux()) {
+            hytaleHome = "${System.getProperty("user.home")}/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
+            if (!file(hytaleHome).exists()) {
+                hytaleHome = "${System.getProperty("user.home")}/.local/share/Hytale"
+            }
+        }
+    }
+}
+
+// require_hytale=true keeps local dev behavior (fail fast if Hytale is missing).
+// CI can run with: ./gradlew ciCheck -Prequire_hytale=false
+def requireHytale = (project.findProperty('require_hytale') ?: 'true').toString().toBoolean()
+def hytaleHomePath = project.findProperty('hytaleHome')
+def hytaleHomeDir = (hytaleHomePath == null) ? null : file(hytaleHomePath)
+
+if (requireHytale) {
+    if (hytaleHomeDir == null) {
+        throw new GradleException('Your Hytale install could not be detected automatically. If you are on an unsupported platform or using a custom install location, please define the install location using the hytale_home property.')
+    }
+    if (!hytaleHomeDir.exists()) {
+        throw new GradleException("Failed to find Hytale at the expected location. Please make sure you have installed the game. The expected location can be changed using the hytale_home property. Currently looking in ${hytaleHomePath}")
+    }
+} else {
+    if (hytaleHomeDir == null || !hytaleHomeDir.exists()) {
+        logger.lifecycle("Hytale install not found; continuing because require_hytale=false. (hytale_home can override the path.)")
+    }
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(java_version)
+    withSourcesJar()
+    withJavadocJar()
+}
+
+// Quiet warnings about missing Javadocs.
+javadoc {
+    options.addStringOption('Xdoclint:-missing', '-quiet')
+}
+
+repositories {
+    mavenCentral()
+}
+
+// Adds the Hytale server as a build dependency, allowing you to reference and
+// compile against their code. This requires you to have Hytale installed using
+// the official launcher for now.
+dependencies {
+    // Compile against the Hytale server API/classes, but don't bundle it.
+    compileOnly files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar")
+    testImplementation files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar")
+
+    // Compile against any jars you drop in /libs (ex: PlayerInteractLib jar),
+    // but don't bundle them unless you explicitly want to.
+    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
+
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+
+// Create the working directory to run the server if it does not already exist.
+def serverRunDir = file("$projectDir/run")
+if (!serverRunDir.exists()) {
+    serverRunDir.mkdirs()
+}
+
+// Updates the manifest.json file with the latest properties defined in the
+// build.properties file. Currently we update the version and if packs are
+// included with the plugin.
+tasks.register('updatePluginManifest') {
+    def manifestFile = file('src/main/resources/manifest.json')
+    doLast {
+        if (!manifestFile.exists()) {
+            throw new GradleException("Could not find manifest.json at ${manifestFile.path}!")
+        }
+        def manifestJson = new groovy.json.JsonSlurper().parseText(manifestFile.text)
+        manifestJson.Version = version
+        manifestJson.IncludesAssetPack = includes_pack.toBoolean()
+        manifestFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(manifestJson))
+    }
+}
+
+// Makes sure the plugin manifest is up to date.
+tasks.named('processResources') {
+    dependsOn 'updatePluginManifest'
+}
+
+// -----------------------------------------------------------------------------
+// CI sanity checks (do not require a local Hytale install)
+// -----------------------------------------------------------------------------
+
+tasks.register('ciCheck') {
+    group = 'verification'
+    description = 'Runs repository sanity checks that do not require a local Hytale install.'
+
+    doLast {
+        def manifestFile = file('src/main/resources/manifest.json')
+        if (!manifestFile.exists()) {
+            throw new GradleException("Could not find manifest.json at ${manifestFile.path}!")
+        }
+
+        def manifestJson = new groovy.json.JsonSlurper().parseText(manifestFile.text)
+
+        def manifestVersion = String.valueOf(manifestJson.Version ?: '').trim()
+        def gradleVersion = project.version.toString()
+        if (manifestVersion != gradleVersion) {
+            throw new GradleException("manifest.json Version (${manifestVersion}) does not match Gradle version (${gradleVersion}).")
+        }
+
+        def mainClass = String.valueOf(manifestJson.Main ?: '').trim()
+        if (mainClass.isEmpty()) {
+            throw new GradleException('manifest.json Main is missing or empty.')
+        }
+
+        def parts = mainClass.split('\\.')
+        if (parts.length < 2) {
+            throw new GradleException("manifest.json Main must be a fully qualified class name, got: ${mainClass}")
+        }
+
+        def className = parts[parts.length - 1]
+        def expectedPackage = parts[0..<(parts.length - 1)].join('.')
+
+        def expectedPath = "src/main/java/${expectedPackage.replace('.', '/')}/${className}.java"
+        def mainFile = file(expectedPath)
+        if (!mainFile.exists()) {
+            throw new GradleException("manifest.json Main points to missing source file: ${expectedPath}")
+        }
+
+        def mainText = mainFile.text
+        def pkgMatcher = (mainText =~ /(?m)^\s*package\s+([^;]+);/)
+        if (!pkgMatcher.find()) {
+            throw new GradleException("Main source file missing package declaration: ${expectedPath}")
+        }
+
+        def declaredPackage = pkgMatcher.group(1).trim()
+        if (declaredPackage != expectedPackage) {
+            throw new GradleException("Main source file package (${declaredPackage}) does not match manifest Main package (${expectedPackage}).")
+        }
+
+        def classMatcher = (mainText =~ /(?m)^\s*public\s+(?:final\s+)?class\s+${className}\b/)
+        if (!classMatcher.find()) {
+            throw new GradleException("Main source file does not declare public class ${className}: ${expectedPath}")
+        }
+    }
+}
+
+def createServerRunArguments(String srcDir) {
+    def programParameters = '--allow-op --disable-sentry --assets="' + "${hytaleHome}/install/$patchline/package/game/latest/Assets.zip" + '"'
+    def modPaths = []
+    if (includes_pack.toBoolean()) {
+        modPaths << srcDir
+    }
+    if (load_user_mods.toBoolean()) {
+        modPaths << "${hytaleHome}/UserData/Mods"
+    }
+    if (!modPaths.isEmpty()) {
+        programParameters += ' --mods="' + modPaths.join(',') + '"'
+    }
+    return programParameters
+}
+
+// Creates a run configuration in IDEA that will run the Hytale server with
+// your plugin and the default assets.
+idea.project.settings.runConfigurations {
+    'HytaleServer'(org.jetbrains.gradle.ext.Application) {
+        mainClass = 'com.hypixel.hytale.Main'
+        moduleName = project.idea.module.name + '.main'
+        programParameters = createServerRunArguments(sourceSets.main.java.srcDirs.first().parentFile.absolutePath)
+        workingDirectory = serverRunDir.absolutePath
+    }
+}
+
+// Creates a launch.json file for VSCode with the same configuration
+tasks.register('generateVSCodeLaunch') {
+    def vscodeDir = file("$projectDir/.vscode")
+    def launchFile = file("$vscodeDir/launch.json")
+    doLast {
+        if (!vscodeDir.exists()) {
+            vscodeDir.mkdirs()
+        }
+        def programParams = createServerRunArguments("\${workspaceFolder}")
+        def launchConfig = [
+            version: "0.2.0",
+            configurations: [
+                [
+                    type: "java",
+                    name: "HytaleServer",
+                    request: "launch",
+                    mainClass: "com.hypixel.hytale.Main",
+                    args: programParams,
+                    cwd: "\${workspaceFolder}/run"
+                ]
+            ]
+        ]
+        launchFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(launchConfig))
+    }
+}
+
+// Copies the built plugin JAR into the user's Hytale mods folder so it loads on next launch.
+// This is the Gradle equivalent of:
+//   cp build/libs/realm_ruler-*.jar "<hytaleHome>/UserData/Mods"
+def hytaleModsDir = file("${project.findProperty('hytaleHome')}/UserData/Mods")
+
+tasks.register('installToHytaleMods', Copy) {
+    dependsOn tasks.named('jar')
+
+    // Copy only the main plugin jar (not -sources/-javadoc).
+    from(tasks.named('jar').flatMap { it.archiveFile })
+    into(hytaleModsDir)
+
+    doFirst {
+        if (!hytaleModsDir.exists()) {
+            hytaleModsDir.mkdirs()
+        }
+    }
+}
+
+// Run install automatically after a local build so you don't forget to copy the jar.
+tasks.named('build') {
+    finalizedBy 'installToHytaleMods'
+}

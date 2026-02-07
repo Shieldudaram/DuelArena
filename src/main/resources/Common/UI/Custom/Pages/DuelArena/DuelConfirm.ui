@@ -1,0 +1,119 @@
+Group #DuelArenaConfirmPage {
+  Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+  LayoutMode: Center;
+
+  Group #Backdrop {
+    Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+    Background: #000000(0.35);
+  }
+
+  Group #ConfirmWindow {
+    Anchor: (Width: 720, Height: 520);
+    LayoutMode: Top;
+    Padding: (Horizontal: 16, Vertical: 16);
+    Background: #0b0f18(0.95);
+
+    Label #TitleLabel {
+      Anchor: (Height: 32);
+      Style: (FontSize: 24, Alignment: Center);
+      Text: "Confirm Duel";
+    }
+
+    Label #SummaryLabel {
+      Anchor: (Top: 10, Width: 688, Height: 140);
+      Style: (FontSize: 14, Alignment: Start);
+      Text: "Summary";
+    }
+
+    Group #YourItemsGroup {
+      Anchor: (Top: 12, Width: 688, Height: 130);
+      LayoutMode: Top;
+      Background: #000000(0.18);
+      Padding: (Horizontal: 12, Vertical: 10);
+
+      Label #YourItemsHeader {
+        Anchor: (Height: 18);
+        Style: (FontSize: 14, Alignment: Start);
+        Text: "Your items";
+      }
+
+      Group #YourItem0 {
+        Anchor: (Top: 8, Height: 22);
+        LayoutMode: Left;
+        Label #YourItem0Label { Anchor: (Width: 640, Height: 18); Style: (FontSize: 14, Alignment: Start); Text: "item x0"; }
+      }
+      Group #YourItem1 {
+        Anchor: (Top: 4, Height: 22);
+        LayoutMode: Left;
+        Label #YourItem1Label { Anchor: (Width: 640, Height: 18); Style: (FontSize: 14, Alignment: Start); Text: "item x0"; }
+      }
+      Group #YourItem2 {
+        Anchor: (Top: 4, Height: 22);
+        LayoutMode: Left;
+        Label #YourItem2Label { Anchor: (Width: 640, Height: 18); Style: (FontSize: 14, Alignment: Start); Text: "item x0"; }
+      }
+      Group #YourItem3 {
+        Anchor: (Top: 4, Height: 22);
+        LayoutMode: Left;
+        Label #YourItem3Label { Anchor: (Width: 640, Height: 18); Style: (FontSize: 14, Alignment: Start); Text: "item x0"; }
+      }
+    }
+
+    Group #OppItemsGroup {
+      Anchor: (Top: 10, Width: 688, Height: 130);
+      LayoutMode: Top;
+      Background: #000000(0.18);
+      Padding: (Horizontal: 12, Vertical: 10);
+
+      Label #OppItemsHeader {
+        Anchor: (Height: 18);
+        Style: (FontSize: 14, Alignment: Start);
+        Text: "Opponent items";
+      }
+
+      Group #OppItem0 {
+        Anchor: (Top: 8, Height: 22);
+        LayoutMode: Left;
+        Label #OppItem0Label { Anchor: (Width: 640, Height: 18); Style: (FontSize: 14, Alignment: Start); Text: "item x0"; }
+      }
+      Group #OppItem1 {
+        Anchor: (Top: 4, Height: 22);
+        LayoutMode: Left;
+        Label #OppItem1Label { Anchor: (Width: 640, Height: 18); Style: (FontSize: 14, Alignment: Start); Text: "item x0"; }
+      }
+      Group #OppItem2 {
+        Anchor: (Top: 4, Height: 22);
+        LayoutMode: Left;
+        Label #OppItem2Label { Anchor: (Width: 640, Height: 18); Style: (FontSize: 14, Alignment: Start); Text: "item x0"; }
+      }
+      Group #OppItem3 {
+        Anchor: (Top: 4, Height: 22);
+        LayoutMode: Left;
+        Label #OppItem3Label { Anchor: (Width: 640, Height: 18); Style: (FontSize: 14, Alignment: Start); Text: "item x0"; }
+      }
+    }
+
+    Group #ActionsGroup {
+      Anchor: (Top: 14, Height: 44);
+      LayoutMode: Left;
+      Padding: (Horizontal: 6, Vertical: 6);
+
+      TextButton #AcceptButton {
+        Anchor: (Width: 160, Height: 32);
+        Text: "Accept";
+      }
+
+      TextButton #DeclineButton {
+        Anchor: (Left: 12, Width: 160, Height: 32);
+        Text: "Decline";
+      }
+    }
+
+    Label #CloseHint {
+      Anchor: (Top: 6, Height: 20);
+      Style: (FontSize: 14, Alignment: Center);
+      Text: "Press Esc to close";
+    }
+  }
+}
+

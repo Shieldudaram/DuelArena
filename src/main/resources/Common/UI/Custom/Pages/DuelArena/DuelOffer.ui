@@ -1,0 +1,256 @@
+Group #DuelArenaOfferPage {
+  Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+  LayoutMode: Center;
+
+  Group #Backdrop {
+    Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+    Background: #000000(0.35);
+  }
+
+  Group #OfferWindow {
+    Anchor: (Width: 780, Height: 600);
+    LayoutMode: Top;
+    Padding: (Horizontal: 16, Vertical: 16);
+    Background: #0b0f18(0.95);
+
+    Label #TitleLabel {
+      Anchor: (Height: 32);
+      Style: (FontSize: 24, Alignment: Center);
+      Text: "Duel Offer";
+    }
+
+    Label #PlayersLabel {
+      Anchor: (Top: 8, Height: 24);
+      Style: (FontSize: 16, Alignment: Center);
+      Text: "Player A vs Player B";
+    }
+
+    Label #StatusLabel {
+      Anchor: (Top: 6, Height: 20);
+      Style: (FontSize: 14, Alignment: Center);
+      Text: "Accepted: you OFF | opponent OFF";
+    }
+
+    Group #RulesGroup {
+      Anchor: (Top: 12, Width: 748, Height: 170);
+      LayoutMode: Top;
+      Background: #000000(0.18);
+      Padding: (Horizontal: 12, Vertical: 10);
+
+      Label #RulesHeader {
+        Anchor: (Height: 20);
+        Style: (FontSize: 14, Alignment: Start);
+        Text: "Rules";
+      }
+
+      Group #RulesRow1 {
+        Anchor: (Top: 10, Height: 32);
+        LayoutMode: Left;
+
+        TextButton #ToggleRankedButton {
+          Anchor: (Width: 180, Height: 28);
+          Text: "Ranked: ON";
+        }
+
+        TextButton #ToggleMeleeButton {
+          Anchor: (Left: 10, Width: 180, Height: 28);
+          Text: "Melee: ON";
+        }
+
+        TextButton #ToggleProjectilesButton {
+          Anchor: (Left: 10, Width: 180, Height: 28);
+          Text: "Projectiles: ON";
+        }
+
+        TextButton #ToggleConsumablesButton {
+          Anchor: (Left: 10, Width: 180, Height: 28);
+          Text: "Consumables: ON";
+        }
+      }
+
+      Group #RulesRow2 {
+        Anchor: (Top: 10, Height: 32);
+        LayoutMode: Left;
+
+        TextButton #Armor0Button {
+          Anchor: (Width: 180, Height: 28);
+          Text: "Armor 1: ON";
+        }
+
+        TextButton #Armor1Button {
+          Anchor: (Left: 10, Width: 180, Height: 28);
+          Text: "Armor 2: ON";
+        }
+
+        TextButton #Armor2Button {
+          Anchor: (Left: 10, Width: 180, Height: 28);
+          Text: "Armor 3: ON";
+        }
+
+        TextButton #Armor3Button {
+          Anchor: (Left: 10, Width: 180, Height: 28);
+          Text: "Armor 4: ON";
+        }
+      }
+    }
+
+    Group #StakesGroup {
+      Anchor: (Top: 12, Width: 748, Height: 250);
+      LayoutMode: Top;
+      Background: #000000(0.18);
+      Padding: (Horizontal: 12, Vertical: 10);
+
+      Label #StakesHeader {
+        Anchor: (Height: 20);
+        Style: (FontSize: 14, Alignment: Start);
+        Text: "Stakes (optional)";
+      }
+
+      Label #YourPointsStakeLabel {
+        Anchor: (Top: 8, Height: 20);
+        Style: (FontSize: 14, Alignment: Start);
+        Text: "Your points stake: 0";
+      }
+
+      Group #PointsButtons {
+        Anchor: (Top: 8, Height: 32);
+        LayoutMode: Left;
+
+        TextButton #PointsPlus10 {
+          Anchor: (Width: 90, Height: 28);
+          Text: "+10";
+        }
+        TextButton #PointsPlus100 {
+          Anchor: (Left: 8, Width: 90, Height: 28);
+          Text: "+100";
+        }
+        TextButton #PointsMinus10 {
+          Anchor: (Left: 16, Width: 90, Height: 28);
+          Text: "-10";
+        }
+        TextButton #PointsMinus100 {
+          Anchor: (Left: 8, Width: 90, Height: 28);
+          Text: "-100";
+        }
+      }
+
+      Label #OppPointsStakeLabel {
+        Anchor: (Top: 8, Height: 20);
+        Style: (FontSize: 14, Alignment: Start);
+        Text: "Opponent points stake: 0";
+      }
+
+      Label #YourItemsStakeHeader {
+        Anchor: (Top: 10, Height: 20);
+        Style: (FontSize: 14, Alignment: Start);
+        Text: "Your items stake (from held item)";
+      }
+
+      Group #ItemButtons {
+        Anchor: (Top: 6, Height: 32);
+        LayoutMode: Left;
+
+        TextButton #AddHeld1Button {
+          Anchor: (Width: 170, Height: 28);
+          Text: "Add held x1";
+        }
+
+        TextButton #AddHeld10Button {
+          Anchor: (Left: 10, Width: 170, Height: 28);
+          Text: "Add held x10";
+        }
+      }
+
+      Group #YourItem0 {
+        Anchor: (Top: 8, Height: 28);
+        LayoutMode: Left;
+        Background: #000000(0.18);
+        Padding: (Horizontal: 10, Vertical: 6);
+
+        Label #YourItem0Label {
+          Anchor: (Width: 520, Height: 16);
+          Style: (FontSize: 14, Alignment: Start);
+          Text: "item x0";
+        }
+        TextButton #YourItem0RemoveButton {
+          Anchor: (Left: 10, Width: 160, Height: 18);
+          Text: "Remove";
+        }
+      }
+
+      Group #YourItem1 {
+        Anchor: (Top: 6, Height: 28);
+        LayoutMode: Left;
+        Background: #000000(0.18);
+        Padding: (Horizontal: 10, Vertical: 6);
+
+        Label #YourItem1Label {
+          Anchor: (Width: 520, Height: 16);
+          Style: (FontSize: 14, Alignment: Start);
+          Text: "item x0";
+        }
+        TextButton #YourItem1RemoveButton {
+          Anchor: (Left: 10, Width: 160, Height: 18);
+          Text: "Remove";
+        }
+      }
+
+      Group #YourItem2 {
+        Anchor: (Top: 6, Height: 28);
+        LayoutMode: Left;
+        Background: #000000(0.18);
+        Padding: (Horizontal: 10, Vertical: 6);
+
+        Label #YourItem2Label {
+          Anchor: (Width: 520, Height: 16);
+          Style: (FontSize: 14, Alignment: Start);
+          Text: "item x0";
+        }
+        TextButton #YourItem2RemoveButton {
+          Anchor: (Left: 10, Width: 160, Height: 18);
+          Text: "Remove";
+        }
+      }
+
+      Group #YourItem3 {
+        Anchor: (Top: 6, Height: 28);
+        LayoutMode: Left;
+        Background: #000000(0.18);
+        Padding: (Horizontal: 10, Vertical: 6);
+
+        Label #YourItem3Label {
+          Anchor: (Width: 520, Height: 16);
+          Style: (FontSize: 14, Alignment: Start);
+          Text: "item x0";
+        }
+        TextButton #YourItem3RemoveButton {
+          Anchor: (Left: 10, Width: 160, Height: 18);
+          Text: "Remove";
+        }
+      }
+    }
+
+    Group #ActionsGroup {
+      Anchor: (Top: 16, Height: 44);
+      LayoutMode: Left;
+      Padding: (Horizontal: 6, Vertical: 6);
+
+      TextButton #AcceptButton {
+        Anchor: (Width: 160, Height: 32);
+        Text: "Accept";
+      }
+
+      TextButton #DeclineButton {
+        Anchor: (Left: 12, Width: 160, Height: 32);
+        Text: "Decline";
+      }
+    }
+
+    Label #CloseHint {
+      Anchor: (Top: 6, Height: 20);
+      Style: (FontSize: 14, Alignment: Center);
+      Text: "Press Esc to close";
+    }
+  }
+}
+

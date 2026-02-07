@@ -1,0 +1,22 @@
+{
+    "Group": "Chris__",
+    "Name": "DuelArenaPlugin",
+    "Version": "0.1.0",
+    "Description": "Adds a RuneScape-inspired duel arena and tournaments to Hytale.",
+    "Authors": [
+        {
+            "Name": "Chris__"
+        }
+    ],
+    "Website": "",
+    "ServerVersion": "*",
+    "Dependencies": {
+        
+    },
+    "OptionalDependencies": {
+        "Buuz135:SimpleClaims": "*"
+    },
+    "DisabledByDefault": false,
+    "Main": "com.Chris__.duel_arena.DuelArenaPlugin",
+    "IncludesAssetPack": true
+}

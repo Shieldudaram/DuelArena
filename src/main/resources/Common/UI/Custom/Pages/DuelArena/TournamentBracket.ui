@@ -1,0 +1,52 @@
+Group #DuelArenaTournamentBracketPage {
+  Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+  LayoutMode: Center;
+
+  Group #Backdrop {
+    Anchor: (Top: 0, Bottom: 0, Left: 0, Right: 0);
+    Background: #000000(0.35);
+  }
+
+  Group #BracketWindow {
+    Anchor: (Width: 760, Height: 560);
+    LayoutMode: Top;
+    Padding: (Horizontal: 16, Vertical: 16);
+    Background: #0b0f18(0.95);
+
+    Label #TitleLabel {
+      Anchor: (Height: 32);
+      Style: (FontSize: 24, Alignment: Center);
+      Text: "Tournament";
+    }
+
+    Label #StatusLabel {
+      Anchor: (Top: 8, Height: 22);
+      Style: (FontSize: 14, Alignment: Center);
+      Text: "Status";
+    }
+
+    Label #BodyLabel {
+      Anchor: (Top: 10, Width: 728, Height: 430);
+      Style: (FontSize: 14, Alignment: Start);
+      Text: "Bracket";
+    }
+
+    Group #ActionsGroup {
+      Anchor: (Top: 14, Height: 44);
+      LayoutMode: Left;
+      Padding: (Horizontal: 6, Vertical: 6);
+
+      TextButton #RefreshButton {
+        Anchor: (Width: 160, Height: 32);
+        Text: "Refresh";
+      }
+    }
+
+    Label #CloseHint {
+      Anchor: (Top: 6, Height: 20);
+      Style: (FontSize: 14, Alignment: Center);
+      Text: "Press Esc to close";
+    }
+  }
+}
+
