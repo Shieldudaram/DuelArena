@@ -131,6 +131,20 @@ tasks.register('ciCheck') {
             throw new GradleException("manifest.json Version (${manifestVersion}) does not match Gradle version (${gradleVersion}).")
         }
 
+        def deps = manifestJson.Dependencies
+        if (!(deps instanceof Map) || !deps.containsKey('Buuz135:MultipleHUD')) {
+            throw new GradleException("manifest.json Dependencies must include required plugin Buuz135:MultipleHUD.")
+        }
+        def mhudRange = String.valueOf(deps['Buuz135:MultipleHUD'] ?: '').trim()
+        if (mhudRange.isEmpty()) {
+            throw new GradleException("manifest.json dependency Buuz135:MultipleHUD must have a non-empty version range.")
+        }
+
+        def mhudJar = file('libs/MultipleHUD-1.0.4.jar')
+        if (!mhudJar.exists()) {
+            throw new GradleException("Missing required dependency jar at ${mhudJar.path}.")
+        }
+
         def mainClass = String.valueOf(manifestJson.Main ?: '').trim()
         if (mainClass.isEmpty()) {
             throw new GradleException('manifest.json Main is missing or empty.')

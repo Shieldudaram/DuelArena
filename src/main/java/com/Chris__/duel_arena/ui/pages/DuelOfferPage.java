@@ -33,7 +33,7 @@ public final class DuelOfferPage extends InteractiveCustomUIPage<DuelOfferPage.D
 
     public static final class DuelOfferEventData {
         public static final BuilderCodec<DuelOfferEventData> CODEC = BuilderCodec.builder(DuelOfferEventData.class, DuelOfferEventData::new)
-                .append(new KeyedCodec<>("id", Codec.STRING), DuelOfferEventData::setId, DuelOfferEventData::getId)
+                .append(new KeyedCodec<>("Id", Codec.STRING), DuelOfferEventData::setId, DuelOfferEventData::getId)
                 .add()
                 .build();
 
@@ -114,14 +114,14 @@ public final class DuelOfferPage extends InteractiveCustomUIPage<DuelOfferPage.D
             setToggle(ui, "#Armor2Button", "Armor 3", safeArmorAllowed(s, 2));
             setToggle(ui, "#Armor3Button", "Armor 4", safeArmorAllowed(s, 3));
 
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#ToggleRankedButton", EventData.of("id", "rule:ranked"));
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#ToggleMeleeButton", EventData.of("id", "rule:melee"));
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#ToggleProjectilesButton", EventData.of("id", "rule:projectiles"));
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#ToggleConsumablesButton", EventData.of("id", "rule:consumables"));
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#Armor0Button", EventData.of("id", "rule:armor0"));
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#Armor1Button", EventData.of("id", "rule:armor1"));
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#Armor2Button", EventData.of("id", "rule:armor2"));
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#Armor3Button", EventData.of("id", "rule:armor3"));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#ToggleRankedButton", EventData.of("Id", "rule:ranked"));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#ToggleMeleeButton", EventData.of("Id", "rule:melee"));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#ToggleProjectilesButton", EventData.of("Id", "rule:projectiles"));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#ToggleConsumablesButton", EventData.of("Id", "rule:consumables"));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#Armor0Button", EventData.of("Id", "rule:armor0"));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#Armor1Button", EventData.of("Id", "rule:armor1"));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#Armor2Button", EventData.of("Id", "rule:armor2"));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#Armor3Button", EventData.of("Id", "rule:armor3"));
         }
 
         boolean showStakes = s.stakingEnabled && !s.tournamentMatch;
@@ -136,13 +136,13 @@ public final class DuelOfferPage extends InteractiveCustomUIPage<DuelOfferPage.D
         ui.set("#OppPointsStakeLabel.TextSpans", Message.raw("Opponent points stake: " + oppPoints));
 
         if (showStakes) {
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#PointsPlus10", EventData.of("id", "stake:points:+10"));
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#PointsPlus100", EventData.of("id", "stake:points:+100"));
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#PointsMinus10", EventData.of("id", "stake:points:-10"));
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#PointsMinus100", EventData.of("id", "stake:points:-100"));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#PointsPlus10", EventData.of("Id", "stake:points:+10"));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#PointsPlus100", EventData.of("Id", "stake:points:+100"));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#PointsMinus10", EventData.of("Id", "stake:points:-10"));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#PointsMinus100", EventData.of("Id", "stake:points:-100"));
 
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#AddHeld1Button", EventData.of("id", "stake:item:add:1"));
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#AddHeld10Button", EventData.of("id", "stake:item:add:10"));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#AddHeld1Button", EventData.of("Id", "stake:item:add:1"));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#AddHeld10Button", EventData.of("Id", "stake:item:add:10"));
         }
 
         // Item rows (viewer)
@@ -162,13 +162,13 @@ public final class DuelOfferPage extends InteractiveCustomUIPage<DuelOfferPage.D
             ui.set(row + ".Visible", true);
             ui.set(label, Message.raw(text));
             if (showStakes) {
-                events.addEventBinding(CustomUIEventBindingType.Activating, remove, EventData.of("id", "stake:item:remove:" + i));
+                events.addEventBinding(CustomUIEventBindingType.Activating, remove, EventData.of("Id", "stake:item:remove:" + i));
             }
         }
 
         // Actions
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#AcceptButton", EventData.of("id", "offer:accept"));
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#DeclineButton", EventData.of("id", "offer:decline"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#AcceptButton", EventData.of("Id", "offer:accept"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#DeclineButton", EventData.of("Id", "offer:decline"));
     }
 
     @Override
@@ -256,4 +256,3 @@ public final class DuelOfferPage extends InteractiveCustomUIPage<DuelOfferPage.D
         return uuid.length() <= 8 ? uuid : uuid.substring(0, 8);
     }
 }
-

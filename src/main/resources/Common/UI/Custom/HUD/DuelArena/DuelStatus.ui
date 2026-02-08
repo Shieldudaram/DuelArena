@@ -1,0 +1,24 @@
+Group #DuelArenaDuelStatus {
+  Anchor: (Top: 12, Right: 12, Width: 360, Height: 108);
+  LayoutMode: Top;
+  Padding: (Horizontal: 12, Vertical: 10);
+  Background: #0b0f18(0.92);
+
+  Label #TitleLabel {
+    Anchor: (Height: 22);
+    Style: (FontSize: 16, Alignment: Start);
+    Text: "Duel";
+  }
+
+  Label #Line1Label {
+    Anchor: (Top: 8, Height: 20);
+    Style: (FontSize: 14, Alignment: Start);
+    Text: "";
+  }
+
+  Label #Line2Label {
+    Anchor: (Top: 2, Height: 20);
+    Style: (FontSize: 14, Alignment: Start);
+    Text: "";
+  }
+}

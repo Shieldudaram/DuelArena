@@ -32,7 +32,7 @@ public final class DuelConfirmPage extends InteractiveCustomUIPage<DuelConfirmPa
 
     public static final class DuelConfirmEventData {
         public static final BuilderCodec<DuelConfirmEventData> CODEC = BuilderCodec.builder(DuelConfirmEventData.class, DuelConfirmEventData::new)
-                .append(new KeyedCodec<>("id", Codec.STRING), DuelConfirmEventData::setId, DuelConfirmEventData::getId)
+                .append(new KeyedCodec<>("Id", Codec.STRING), DuelConfirmEventData::setId, DuelConfirmEventData::getId)
                 .add()
                 .build();
 
@@ -126,8 +126,8 @@ public final class DuelConfirmPage extends InteractiveCustomUIPage<DuelConfirmPa
             renderItems(ui, oppItems, "#OppItem", "#OppItem");
         }
 
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#AcceptButton", EventData.of("id", "confirm:accept"));
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#DeclineButton", EventData.of("id", "confirm:decline"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#AcceptButton", EventData.of("Id", "confirm:accept"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#DeclineButton", EventData.of("Id", "confirm:decline"));
     }
 
     @Override

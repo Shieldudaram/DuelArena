@@ -404,7 +404,8 @@ public final class DuelService {
         long now = System.currentTimeMillis();
 
         DuelCancelReason cancelReason = null;
-        Message postMessage = null;
+        Message startMessage = null;
+        Message cancelMessage = null;
 
         synchronized (lock) {
             DuelSession cur = sessionsById.get(sessionId);
@@ -413,10 +414,21 @@ public final class DuelService {
 
             if (!ensureArenaAllocated(cur)) {
                 cancelReason = DuelCancelReason.NO_ARENA_AVAILABLE;
+                ArenaService.ArenaAvailability availability = (arenaService == null) ? null : arenaService.getAvailabilitySnapshot();
+                if (logger != null) {
+                    logger.atWarning().log("[DuelArena] startCountdown canceled: no arena available session=%s playerA=%s playerB=%s arenas={%s}",
+                            safe(cur.id), safe(cur.playerAUuid), safe(cur.playerBUuid), arenaAvailabilitySummary(availability));
+                }
+                cancelMessage = Message.raw("[DuelArena] No duel arena is currently free. Try again shortly.");
             }
 
             if (cancelReason == null && !ensurePlayersOnline(cur)) {
                 cancelReason = DuelCancelReason.PLAYER_OFFLINE;
+                if (logger != null) {
+                    logger.atInfo().log("[DuelArena] startCountdown canceled: player offline session=%s playerA=%s playerB=%s",
+                            safe(cur.id), safe(cur.playerAUuid), safe(cur.playerBUuid));
+                }
+                cancelMessage = Message.raw("[DuelArena] Duel cancelled because one participant is no longer online or in-world.");
             }
 
             if (cancelReason == null && cur.stakingEnabled && !cur.escrowed) {
@@ -440,20 +452,20 @@ public final class DuelService {
                     cur.stage = DuelStage.IN_PROGRESS;
                     cur.stageStartedAtMillis = now;
                     cur.countdownEndsAtMillis = 0L;
-                    postMessage = Message.raw("[DuelArena] Fight!");
+                    startMessage = Message.raw("[DuelArena] Fight!");
                 } else {
                     cur.stage = DuelStage.COUNTDOWN;
                     cur.stageStartedAtMillis = now;
                     cur.countdownEndsAtMillis = now + (countdownSeconds * 1000L);
-                    postMessage = Message.raw("[DuelArena] Duel starts in " + countdownSeconds + "…");
+                    startMessage = Message.raw("[DuelArena] Duel starts in " + countdownSeconds + "…");
                 }
             }
         }
 
         if (cancelReason != null) {
-            onCanceledSideEffects(s, cancelReason);
-        } else if (postMessage != null) {
-            sendMessageToBoth(s, postMessage);
+            onCanceledSideEffects(s, cancelReason, cancelMessage);
+        } else if (startMessage != null) {
+            sendMessageToBoth(s, startMessage);
         }
     }
 
@@ -631,6 +643,10 @@ public final class DuelService {
     }
 
     private void onCanceledSideEffects(DuelSession session, DuelCancelReason reason) {
+        onCanceledSideEffects(session, reason, null);
+    }
+
+    private void onCanceledSideEffects(DuelSession session, DuelCancelReason reason, Message customCancelMessage) {
         if (session == null) return;
 
         // Return escrow if it was taken.
@@ -653,7 +669,10 @@ public final class DuelService {
             }
         }
 
-        sendMessageToBoth(session, Message.raw("[DuelArena] Duel cancelled (" + reason + ")."));
+        Message message = (customCancelMessage == null) ? cancelMessageForReason(reason) : customCancelMessage;
+        if (message != null) {
+            sendMessageToBoth(session, message);
+        }
     }
 
     private void finishByUuids(String winnerUuid, String loserUuid, DuelEndReason reason) {
@@ -1055,5 +1074,27 @@ public final class DuelService {
         if (uuid == null) return "";
         if (uuid.length() <= 8) return uuid;
         return uuid.substring(0, 8);
+    }
+
+    private static Message cancelMessageForReason(DuelCancelReason reason) {
+        if (reason == DuelCancelReason.NO_ARENA_AVAILABLE) {
+            return Message.raw("[DuelArena] No duel arena is currently free. Try again shortly.");
+        }
+        if (reason == DuelCancelReason.PLAYER_OFFLINE) {
+            return Message.raw("[DuelArena] Duel cancelled because one participant is no longer online or in-world.");
+        }
+        return Message.raw("[DuelArena] Duel cancelled (" + reason + ").");
+    }
+
+    private static String arenaAvailabilitySummary(ArenaService.ArenaAvailability availability) {
+        if (availability == null) return "unavailable";
+        return "total=" + availability.total()
+                + ", valid=" + availability.valid()
+                + ", reserved=" + availability.reserved()
+                + ", free=" + availability.free();
+    }
+
+    private static String safe(String value) {
+        return (value == null) ? "" : value;
     }
 }
