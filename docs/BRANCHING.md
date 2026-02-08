@@ -14,6 +14,7 @@ This repository uses a hybrid integration model:
 1. Update integration branch:
    - `git switch codex/dev`
    - `git pull`
+   - If you need to push integration-branch commits directly: `git push origin HEAD:dev`
 2. Create a work branch from `codex/dev`:
    - `git switch -c codex/feat/<short-topic>`
 3. Implement and validate:
