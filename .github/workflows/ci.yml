@@ -37,4 +37,21 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Run CI checks
-        run: ./gradlew -Prequire_hytale=false ciCheck test --no-daemon
+        run: ./gradlew -Prequire_hytale=false ciCheck --no-daemon
+
+      - name: Run tests (when Hytale server classes are available)
+        env:
+          HYTALE_HOME: ${{ vars.HYTALE_HOME }}
+        run: |
+          if [ -z "${HYTALE_HOME}" ]; then
+            echo "HYTALE_HOME is not set; skipping tests that require HytaleServer.jar."
+            exit 0
+          fi
+
+          JAR_PATH="${HYTALE_HOME}/install/release/package/game/latest/Server/HytaleServer.jar"
+          if [ ! -f "${JAR_PATH}" ]; then
+            echo "HytaleServer.jar not found at ${JAR_PATH}; skipping tests."
+            exit 0
+          fi
+
+          ./gradlew -Prequire_hytale=false test --no-daemon -Phytale_home="${HYTALE_HOME}"
