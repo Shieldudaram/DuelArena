@@ -1,5 +1,7 @@
 package com.Chris__.duel_arena.ui.pages;
 
+import com.Chris__.duel_arena.config.ConfigRepository;
+import com.Chris__.duel_arena.config.DuelConfig;
 import com.Chris__.duel_arena.tourney.TournamentService;
 import com.Chris__.duel_arena.tourney.TournamentState;
 import com.hypixel.hytale.codec.Codec;
@@ -24,7 +26,7 @@ public final class TournamentBracketPage extends InteractiveCustomUIPage<Tournam
 
     public static final class BracketEventData {
         public static final BuilderCodec<BracketEventData> CODEC = BuilderCodec.builder(BracketEventData.class, BracketEventData::new)
-                .append(new KeyedCodec<>("id", Codec.STRING), BracketEventData::setId, BracketEventData::getId)
+                .append(new KeyedCodec<>("Id", Codec.STRING), BracketEventData::setId, BracketEventData::getId)
                 .add()
                 .build();
 
@@ -41,13 +43,16 @@ public final class TournamentBracketPage extends InteractiveCustomUIPage<Tournam
 
     private final TournamentService tournamentService;
     private final Consumer<String> onRefresh;
+    private final ConfigRepository configRepository;
 
     public TournamentBracketPage(@Nonnull PlayerRef playerRef,
                                  TournamentService tournamentService,
-                                 Consumer<String> onRefresh) {
+                                 Consumer<String> onRefresh,
+                                 ConfigRepository configRepository) {
         super(playerRef, CustomPageLifetime.CanDismiss, BracketEventData.CODEC);
         this.tournamentService = tournamentService;
         this.onRefresh = onRefresh;
+        this.configRepository = configRepository;
     }
 
     @Override
@@ -55,7 +60,11 @@ public final class TournamentBracketPage extends InteractiveCustomUIPage<Tournam
                       @Nonnull UICommandBuilder ui,
                       @Nonnull UIEventBuilder events,
                       @Nonnull Store<EntityStore> store) {
-        ui.append("Pages/DuelArena/TournamentBracket.ui");
+        DuelConfig cfg = (configRepository == null) ? null : configRepository.get();
+        String uiPath = (cfg == null || cfg.ui == null || cfg.ui.bracketUiPath == null || cfg.ui.bracketUiPath.isBlank())
+                ? "Pages/DuelArena/TournamentBracket.ui"
+                : cfg.ui.bracketUiPath.trim();
+        ui.append(uiPath);
 
         TournamentState t = (tournamentService == null) ? null : tournamentService.getActive();
         if (t == null) {
@@ -85,7 +94,7 @@ public final class TournamentBracketPage extends InteractiveCustomUIPage<Tournam
             ui.set("#BodyLabel.TextSpans", Message.raw(body.toString().trim()));
         }
 
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#RefreshButton", EventData.of("id", "bracket:refresh"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#RefreshButton", EventData.of("Id", "bracket:refresh"));
     }
 
     @Override
@@ -113,4 +122,3 @@ public final class TournamentBracketPage extends InteractiveCustomUIPage<Tournam
         return uuid.substring(0, 8);
     }
 }
-

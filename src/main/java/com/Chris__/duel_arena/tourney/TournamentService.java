@@ -208,23 +208,31 @@ public final class TournamentService implements DuelServiceListener {
             return false;
         }
 
+        boolean releaseAllocatedArena = false;
         synchronized (lock) {
-            if (active == null || active != t) return false;
-            if (t.status != TournamentState.Status.LOBBY) return false;
+            if (active == null || active != t) {
+                releaseAllocatedArena = true;
+            } else if (t.status != TournamentState.Status.LOBBY) {
+                releaseAllocatedArena = true;
+            } else {
+                t.arena = arena;
+                t.arenaReservationKey = reservationKey;
+                t.status = TournamentState.Status.RUNNING;
 
-            t.arena = arena;
-            t.arenaReservationKey = reservationKey;
-            t.status = TournamentState.Status.RUNNING;
+                // Build initial round players (shuffle for randomness).
+                t.currentRoundPlayers = new ArrayList<>(t.entrants);
+                Collections.shuffle(t.currentRoundPlayers, ThreadLocalRandom.current());
+                t.nextRoundPlayers = new ArrayList<>();
+                t.rounds = new ArrayList<>();
+                t.currentRoundNumber = 1;
+                t.currentMatchIndex = 0;
 
-            // Build initial round players (shuffle for randomness).
-            t.currentRoundPlayers = new ArrayList<>(t.entrants);
-            Collections.shuffle(t.currentRoundPlayers, ThreadLocalRandom.current());
-            t.nextRoundPlayers = new ArrayList<>();
-            t.rounds = new ArrayList<>();
-            t.currentRoundNumber = 1;
-            t.currentMatchIndex = 0;
-
-            t.rounds.add(buildRound(t.currentRoundNumber, t.currentRoundPlayers));
+                t.rounds.add(buildRound(t.currentRoundNumber, t.currentRoundPlayers));
+            }
+        }
+        if (releaseAllocatedArena) {
+            releaseArenaReservation(arena, reservationKey);
+            return false;
         }
 
         broadcastToEntrants(t, Message.raw("[DuelArena] Tournament started! Arena=" + safeArenaId(arena)));
@@ -417,57 +425,59 @@ public final class TournamentService implements DuelServiceListener {
         if (t == null) return;
 
         DuelConfig cfg = (configRepository == null) ? null : configRepository.get();
-        if (cfg == null || cfg.tournament == null || cfg.tournament.rewards == null) return;
+        DuelConfig.Tournament.Rewards rewards = (cfg == null || cfg.tournament == null) ? null : cfg.tournament.rewards;
 
         String winner = t.championUuid;
         String runnerUp = t.runnerUpUuid;
 
-        broadcastToEntrants(t, Message.raw("[DuelArena] Tournament complete! Winner: " + shortUuid(winner)));
+        try {
+            broadcastToEntrants(t, Message.raw("[DuelArena] Tournament complete! Winner: " + shortUuid(winner)));
 
-        // Participation points.
-        int participation = Math.max(0, cfg.tournament.rewards.participationPoints);
-        if (participation > 0 && pointsRepository != null) {
-            for (String u : t.entrants) {
-                if (u == null || u.isBlank()) continue;
-                pointsRepository.addPoints(u, participation);
-            }
-        }
-
-        // Winner/runner-up bonuses.
-        if (pointsRepository != null) {
-            int wBonus = Math.max(0, cfg.tournament.rewards.winnerPointsBonus);
-            int rBonus = Math.max(0, cfg.tournament.rewards.runnerUpPointsBonus);
-            if (wBonus > 0 && winner != null && !winner.isBlank()) pointsRepository.addPoints(winner, wBonus);
-            if (rBonus > 0 && runnerUp != null && !runnerUp.isBlank()) pointsRepository.addPoints(runnerUp, rBonus);
-        }
-
-        // Winner items.
-        if (cfg.tournament.rewards.winnerItems != null && winner != null && !winner.isBlank()) {
-            for (DuelConfig.Tournament.ItemReward r : cfg.tournament.rewards.winnerItems) {
-                if (r == null) continue;
-                String itemId = (r.itemId == null) ? "" : r.itemId.trim();
-                int amount = Math.max(1, r.amount);
-                if (itemId.isEmpty() || "REPLACE_ME".equalsIgnoreCase(itemId)) continue;
-
-                ItemStack st;
-                try {
-                    st = new ItemStack(itemId, amount);
-                } catch (Throwable ignored) {
-                    st = null;
+            if (rewards != null) {
+                // Participation points.
+                int participation = Math.max(0, rewards.participationPoints);
+                if (participation > 0 && pointsRepository != null) {
+                    for (String u : t.entrants) {
+                        if (u == null || u.isBlank()) continue;
+                        pointsRepository.addPoints(u, participation);
+                    }
                 }
-                if (st == null || st.isEmpty()) continue;
 
-                deliverRewardItem(winner, st);
+                // Winner/runner-up bonuses.
+                if (pointsRepository != null) {
+                    int wBonus = Math.max(0, rewards.winnerPointsBonus);
+                    int rBonus = Math.max(0, rewards.runnerUpPointsBonus);
+                    if (wBonus > 0 && winner != null && !winner.isBlank()) pointsRepository.addPoints(winner, wBonus);
+                    if (rBonus > 0 && runnerUp != null && !runnerUp.isBlank()) pointsRepository.addPoints(runnerUp, rBonus);
+                }
+
+                // Winner items.
+                if (rewards.winnerItems != null && winner != null && !winner.isBlank()) {
+                    for (DuelConfig.Tournament.ItemReward r : rewards.winnerItems) {
+                        if (r == null) continue;
+                        String itemId = (r.itemId == null) ? "" : r.itemId.trim();
+                        int amount = Math.max(1, r.amount);
+                        if (itemId.isEmpty() || "REPLACE_ME".equalsIgnoreCase(itemId)) continue;
+
+                        ItemStack st;
+                        try {
+                            st = new ItemStack(itemId, amount);
+                        } catch (Throwable ignored) {
+                            st = null;
+                        }
+                        if (st == null || st.isEmpty()) continue;
+
+                        deliverRewardItem(winner, st);
+                    }
+                }
+            } else if (logger != null) {
+                logger.atWarning().log("[DuelArena] Tournament rewards config is missing; skipping payouts. tournament=%s", t.id);
             }
-        }
-
-        // Release arena lock.
-        if (arenaService != null && t.arena != null && t.arena.id != null && !t.arena.id.isBlank()) {
-            arenaService.releaseArena(t.arena.id, t.arenaReservationKey);
-        }
-
-        synchronized (lock) {
-            if (active == t) active = null;
+        } finally {
+            releaseArenaReservation(t.arena, t.arenaReservationKey);
+            synchronized (lock) {
+                if (active == t) active = null;
+            }
         }
     }
 
@@ -563,6 +573,12 @@ public final class TournamentService implements DuelServiceListener {
     private static String safeArenaId(Arena a) {
         if (a == null || a.id == null) return "";
         return a.id;
+    }
+
+    private void releaseArenaReservation(Arena arena, String reservationKey) {
+        if (arenaService == null || arena == null || arena.id == null || arena.id.isBlank()) return;
+        if (reservationKey == null || reservationKey.isBlank()) return;
+        arenaService.releaseArena(arena.id, reservationKey);
     }
 
     private String newTournamentId() {

@@ -20,11 +20,14 @@ import com.Chris__.duel_arena.systems.ArenaUseBlockEventSystem;
 import com.Chris__.duel_arena.systems.DuelArenaDamageSystem;
 import com.Chris__.duel_arena.systems.DuelArenaTickSystem;
 import com.Chris__.duel_arena.tourney.TournamentService;
+import com.Chris__.duel_arena.integration.MultipleHudBridge;
 import com.Chris__.duel_arena.ui.DuelUiService;
 import com.Chris__.duel_arena.util.TeleportService;
 import com.Chris__.duel_arena.commands.DuelCommand;
 import com.Chris__.duel_arena.commands.TourneyCommand;
 import com.Chris__.duel_arena.integration.SimpleClaimsVerifier;
+import com.buuz135.mhud.MultipleHUD;
+import com.hypixel.hytale.common.plugin.PluginIdentifier;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.server.core.Message;
@@ -35,6 +38,7 @@ import com.hypixel.hytale.server.core.event.events.player.PlayerInteractEvent;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
+import com.hypixel.hytale.server.core.plugin.PluginManager;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 
 import javax.annotation.Nonnull;
@@ -109,7 +113,14 @@ public final class DuelArenaPlugin extends JavaPlugin {
         );
         this.duelService.addListener(this.tournamentService);
 
-        this.duelUiService = new DuelUiService(this.duelService, this.tournamentService, this.configRepository);
+        MultipleHUD multipleHUD = requireMultipleHudOrThrow();
+        MultipleHudBridge multipleHudBridge = new MultipleHudBridge(multipleHUD);
+        this.duelUiService = new DuelUiService(
+                this.duelService,
+                this.tournamentService,
+                this.configRepository,
+                multipleHudBridge
+        );
 
         // ---------------------------------------------------------------------
         // ECS systems (events + ticking)
@@ -167,6 +178,29 @@ public final class DuelArenaPlugin extends JavaPlugin {
 
         if (this.simpleClaimsVerifier != null) {
             this.simpleClaimsVerifier.verifyArenasWarnOnly();
+        }
+    }
+
+    private static MultipleHUD requireMultipleHudOrThrow() {
+        try {
+            PluginManager pm = PluginManager.get();
+            if (pm == null) {
+                throw new IllegalStateException("[DuelArena] Missing required dependency Buuz135:MultipleHUD (PluginManager unavailable).");
+            }
+
+            if (pm.getPlugin(new PluginIdentifier("Buuz135", "MultipleHUD")) == null) {
+                throw new IllegalStateException("[DuelArena] Missing required dependency Buuz135:MultipleHUD.");
+            }
+
+            MultipleHUD instance = MultipleHUD.getInstance();
+            if (instance == null) {
+                throw new IllegalStateException("[DuelArena] Missing required dependency Buuz135:MultipleHUD (instance unavailable).");
+            }
+            return instance;
+        } catch (IllegalStateException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException("[DuelArena] Missing required dependency Buuz135:MultipleHUD.", t);
         }
     }
 

@@ -18,6 +18,9 @@ public final class ArenaService {
         SPECTATOR
     }
 
+    public record ArenaAvailability(int total, int valid, int reserved, int free) {
+    }
+
     private final ArenaRepository arenaRepository;
     private final HytaleLogger logger;
 
@@ -70,6 +73,29 @@ public final class ArenaService {
         return reservations.containsKey(arenaId.toLowerCase(Locale.ROOT));
     }
 
+    public ArenaAvailability getAvailabilitySnapshot() {
+        int total = 0;
+        int valid = 0;
+        int reserved = 0;
+
+        synchronized (lock) {
+            for (Arena a : arenaById.values()) {
+                if (a == null) continue;
+                total++;
+                if (!a.isValidForUse()) continue;
+                valid++;
+
+                String id = (a.id == null) ? "" : a.id.toLowerCase(Locale.ROOT);
+                if (!id.isEmpty() && reservations.containsKey(id)) {
+                    reserved++;
+                }
+            }
+        }
+
+        int free = Math.max(0, valid - reserved);
+        return new ArenaAvailability(total, valid, reserved, free);
+    }
+
     public Arena allocateAnyFreeArena(String reservationKey) {
         if (reservationKey == null || reservationKey.isBlank()) return null;
 
@@ -82,7 +108,9 @@ public final class ArenaService {
 
             String existing = reservations.putIfAbsent(id, reservationKey);
             if (existing == null) {
-                logger.atInfo().log("[DuelArena] reserved arena=%s key=%s", a.id, reservationKey);
+                if (logger != null) {
+                    logger.atInfo().log("[DuelArena] reserved arena=%s key=%s", a.id, reservationKey);
+                }
                 return a;
             }
         }
@@ -97,7 +125,9 @@ public final class ArenaService {
         String cur = reservations.get(id);
         if (cur != null && cur.equals(reservationKey)) {
             reservations.remove(id);
-            logger.atInfo().log("[DuelArena] released arena=%s key=%s", arenaId, reservationKey);
+            if (logger != null) {
+                logger.atInfo().log("[DuelArena] released arena=%s key=%s", arenaId, reservationKey);
+            }
         }
     }
 
@@ -117,4 +147,3 @@ public final class ArenaService {
         return Zone.NONE;
     }
 }
-
