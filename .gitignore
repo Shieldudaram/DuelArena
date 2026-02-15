@@ -7,6 +7,9 @@ build/
 
 ### Hytale ###
 run/
+.env
+.rr_assist/
+.rr_assist_global/
 
 ### IntelliJ IDEA ###
 .idea/
@@ -40,4 +43,4 @@ bin/
 .vscode/
 
 ### Mac OS ###
-.DS_Store.rr_assist/
+.DS_Store
