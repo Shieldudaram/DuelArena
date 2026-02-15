@@ -2,29 +2,35 @@
 
 This repository uses a hybrid integration model:
 
-- Long-lived integration branch: `dev` (local branch: `codex/dev`)
+- Long-lived integration branch: `dev`
 - Release branch: `main`
 - Short-lived work branches:
-  - `codex/feat/<topic>`
-  - `codex/fix/<topic>`
-  - `codex/chore/<topic>`
+  - `feat/<topic>`
+  - `fix/<topic>`
+  - `chore/<topic>`
 
 ## Daily Development
 
 1. Update integration branch:
-   - `git switch codex/dev`
+   - `git switch dev`
    - `git pull`
-   - If you need to push integration-branch commits directly: `git push origin HEAD:dev`
-2. Create a work branch from `codex/dev`:
-   - `git switch -c codex/feat/<short-topic>`
+2. Create a work branch from `dev`:
+   - `git switch -c feat/<short-topic>`
 3. Implement and validate:
    - `./gradlew -Prequire_hytale=false ciCheck test`
 4. Push branch:
-   - `git push -u origin codex/feat/<short-topic>`
+   - `git push -u origin feat/<short-topic>`
 5. Open PR:
-   - `codex/feat/<short-topic> -> dev`
+   - `feat/<short-topic> -> dev`
 6. Merge strategy to `dev`:
    - Squash merge
+
+## Temporary Branch Lifecycle
+
+- Work branches are temporary.
+- Delete temporary branches immediately after merge or close (local and remote).
+- Keep only `main` and `dev` as long-lived branches.
+- Keep GitHub setting "Automatically delete head branches" enabled.
 
 ## Releases
 
@@ -41,14 +47,26 @@ This repository uses a hybrid integration model:
 1. Branch from `main`:
    - `git switch main`
    - `git pull`
-   - `git switch -c codex/fix/<topic>`
+   - `git switch -c fix/<topic>`
 2. Open PR:
-   - `codex/fix/<topic> -> main`
+   - `fix/<topic> -> main`
 3. Tag patch release on `main`.
-4. Back-merge:
+4. Mandatory back-merge:
    - `main -> dev`
+
+## PR Ref Rules
+
+- PR head/base arguments must be remote branch names, not local aliases.
+- Examples:
+  - `gh pr create --head main --base dev`
+  - `gh pr create --head feat/my-change --base dev`
+
+## Cleanup Checkpoint
+
+- Removed temporary bootstrap safety branch at commit `e0cae51`.
+- Cleanup date: 2026-02-15.
 
 ## Protection Policy
 
-- `main`: PR-required, review-required, required checks, direct push blocked.
-- `dev`: lighter protection for fast integration; direct push remains possible for maintainers/admins.
+- `main`: PR-required, required check `ciCheck`, direct push blocked, required approvals currently `0` for solo maintainer flow.
+- `dev`: required check `ciCheck`, lighter protection for fast integration.
